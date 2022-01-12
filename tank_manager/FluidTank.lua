@@ -68,23 +68,23 @@ end
 
 local function manage_file(file, y)
     sleep(0.5)
-    if not check_file("manage.py") then
+    if not check_file(file) then
         write_center(file .. " not found, try Download", y)
-        get_file("manage.py", y)
+        get_file(file, y)
     else
         write_center(file .. " found.", y)
     end
 end
 
-
 clear_screen(nil, colours.grey)
-write_center( "Fluid Manager v" .. version, 2)
+write_center("Fluid Manager v" .. version, 2)
 sleep(0.5)
 write_center("Check files ...", 4)
 manage_file("tank_manager.lua", 5)
 write_center("Check complete ...", 9)
 sleep(1)
-clear_screen("Starting")
+clear_screen()
+write_center("Starting", 4)
 local Manager = require "tank_manager"
 mg = Manager:create(modem, 443, 444)
 clear_screen(nil, colors.black)
