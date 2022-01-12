@@ -45,7 +45,7 @@ local function write_center(text, y)
 end
 
 local function get_file(file, y)
-    local path = "https://raw.githubusercontent.com/Cloud500/ltb_server/main/"
+    local path = "https://github.com/Cloud500/fluid_manager_mc/blob/main/display_manager/"
 
     write_center("Downloading " .. file, y)
     local dl = http.get(path .. file)
@@ -82,10 +82,9 @@ clear_screen(nil, colours.grey)
 write_center( "Fluid Manager v" .. version, 2)
 sleep(0.5)
 write_center("Check files ...", 4)
-manage_file("manage.py", 5)
-manage_file("manage.py", 6)
-manage_file("manage.py", 7)
-manage_file("manage.py", 8)
+manage_file("display_manager.lua", 5)
+manage_file("fluid.lua", 6)
+manage_file("gui", 7)
 write_center("Check complete ...", 9)
 sleep(1)
 clear_screen("Starting")
