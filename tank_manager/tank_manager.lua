@@ -135,10 +135,10 @@ function TankManager:create(modem, recive_channel, send_channel)
     tm.modem = modem
     tm.recive_channel = recive_channel
     tm.send_channel = send_channel
-    -- tm.tanks = get_tanks()
-    -- tm.target = get_target()
-    tm.tanks = get_test_tanks()
-    tm.target = get_test_target()
+    tm.tanks = get_tanks()
+    tm.target = get_target()
+    -- tm.tanks = get_test_tanks()
+    -- tm.target = get_test_target()
     tm:wait_for_transmission()
     return tm
 end
