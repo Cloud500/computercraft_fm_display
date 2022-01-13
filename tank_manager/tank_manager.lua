@@ -4,7 +4,6 @@ target_tank_type = "tconstruct:tank"
 TankManager = {}
 TankManager.__index = TankManager
 
-
 local function split(source, sep)
     --[[
         Splits a string on the seperator character
@@ -17,14 +16,17 @@ local function split(source, sep)
     local result, i = {}, 1
     while true do
         local a, b = source:find(sep)
-        if not a then break end
+        if not a then
+            break
+        end
         local candidat = source:sub(1, a - 1)
-        if candidat ~= "" then 
+        if candidat ~= "" then
             result[i] = candidat
-        end i=i+1
+        end
+        i = i + 1
         source = source:sub(b + 1)
     end
-    if source ~= "" then 
+    if source ~= "" then
         result[i] = source
     end
     return result
@@ -97,12 +99,12 @@ local function get_tanks()
             if fluid_name ~= nil then
                 fluid_name = split(fluid_name, ":")[#split(fluid_name, ":")]
 
-            local tank_data = {}
-            tank_data['name'] = tank_name
-            tank_data['fluid'] = fluid_name
-            tank_data['tank'] = tank
-            -- table.insert(tank_list, tank_data)
-            tank_list[tank_name] = tank_data
+                local tank_data = {}
+                tank_data['name'] = tank_name
+                tank_data['fluid'] = fluid_name
+                tank_data['tank'] = tank
+                -- table.insert(tank_list, tank_data)
+                tank_list[tank_name] = tank_data
             end
         end
     end
@@ -155,8 +157,13 @@ function TankManager:tank_action(action, tank_name)
     elseif action == "close" then
         self.tanks[tank_name]["tank"].pullFluid(self.target)
     end
+    sleep(2)
+    local message = {}
+    message["type"] = "tank_control"
+    message["action"] = "tank_answer"
+    message["tank"] = "done"
+    self:send_message(message)
 end
-
 
 function TankManager:format_get_data_message()
     --[[

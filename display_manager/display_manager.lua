@@ -75,6 +75,18 @@ function DisplayManager:create(mon, modem, recive_channel, send_channel, mix_flu
     return fm
 end
 
+function DisplayManager:exit_error(msg)
+    gui.clearAll()
+    self.mon.setTextColor(colors.red)
+    self.mon.setCursorPos((self.width / 2) - 4, (self.height / 2) - 1)
+    self.mon.write("+Error+")
+
+    self.mon.setCursorPos((self.width / 2) - (string.len(msg) / 2), (self.height / 2) + 1)
+    self.mon.write(msg)
+    self.modem.close(self.recive_channel)
+    error("Error: " .. msg)
+end
+
 function DisplayManager:prase_data(data)
     local Fluid = require "fluid"
 
@@ -135,26 +147,24 @@ function DisplayManager:draw_page()
     gui.screenButton()
 end
 
+function DisplayManager:draw_wait_page()
+    gui.clearAll()
+    local msg = "Wait for tank manager"
+    self.mon.setTextColor(colors.white)
+    self.mon.setCursorPos((self.width / 2) - (string.len(msg) / 2), (self.height / 2))
+    self.mon.write(msg)
+end
+
 function DisplayManager:draw_connection_page(add_text)
     add_text = add_text or ""
     gui.clearAll()
     self.mon.setTextColor(colors.gray)
-    self.mon.setCursorPos((self.width/2) - 7, (self.height / 2) - 1)
-	self.mon.write("Connecting ...")
+    self.mon.setCursorPos((self.width / 2) - 7, (self.height / 2) - 1)
+    self.mon.write("Connecting ...")
 
-    self.mon.setCursorPos((self.width/2) - (string.len(add_text) / 2), (self.height / 2) + 1)
+    self.mon.setCursorPos((self.width / 2) - (string.len(add_text) / 2), (self.height / 2) + 1)
     self.mon.write(add_text)
 
-end
-
-function DisplayManager:draw_error_page(reason)
-    gui.clearAll()
-    self.mon.setTextColor(colors.red)
-    self.mon.setCursorPos((self.width/2) - 4, (self.height / 2) - 1)
-	self.mon.write("+Error+")
-
-    self.mon.setCursorPos((self.width/2) - (string.len(reason) / 2), (self.height / 2) + 1)
-    self.mon.write(reason)
 end
 
 function DisplayManager:wait_for_event()
@@ -173,7 +183,8 @@ function DisplayManager:wait_for_event()
             local x = event[3]
             local y = event[4]
             gui.checkxy(x, y)
-            gui.screenButton()
+            -- gui.screenButton()
+            self:draw_page()
         elseif event[1] == "modem_message" then
             local message = event[5]
             print("Recive message")
@@ -200,27 +211,18 @@ function DisplayManager:wait_for_event()
                     self:send_message(self:get_data_message())
                     stay_alive_timer = os.startTimer(1)
                 else
-                    print("Error")
-                    print("No connection to Tank manager")
-                    self:draw_error_page("No connection to Tank manager")
-                    self.modem.close(self.recive_channel)
-                    break
+                    self:exit_error("No connection to Tank manager")
                 end
             end
             if connected == true and tank_manager_alive == true then
                 tank_manager_alive = false
                 stay_alive_timer = os.startTimer(11)
             elseif connected == true and tank_manager_alive == false then
-                print("Error")
-                print("Connection to Tank manager lost")
-                    self:draw_error_page("Connection to Tank manager lost")
-                self.modem.close(self.recive_channel)
-                break
+                self:exit_error("Connection to Tank manager lost")
             end
         end
     end
 end
-
 
 function DisplayManager:next_page()
     self.page = self.page + 1
@@ -242,6 +244,7 @@ function DisplayManager:clear()
     for id, data in pairs(self.data) do
         if data.active then
             data:deactivate()
+            self:wait_for_answer()
         end
     end
     self:draw_page()
@@ -251,9 +254,39 @@ function DisplayManager:deactivate_all_exept(name)
     for id, data in pairs(self.data) do
         if data.name ~= name and data.active then
             data:deactivate()
+            self:wait_for_answer()
             if self.page == data.page then
                 gui.buttonState(data.name, false)
             end
+        end
+    end
+end
+
+function DisplayManager:wait_for_answer()
+    local answer_timer = os.startTimer(5)
+    self:draw_wait_page()
+    while self.loop do
+        local event = {os.pullEvent()}
+
+        if event[1] == "modem_message" then
+            local message = event[5]
+            print("Recive message")
+            print(textutils.serialize(message))
+            if message["type"] ~= nil then
+                if message["type"] == "tank_control" then
+                    if message["action"] == "tank_answer" then
+                        if message["tank"] == "done" then
+                            -- sleep(0.5)
+                            self:draw_page()
+                            break
+                        else
+                            self:exit_error("Error from Tank manager")
+                        end
+                    end
+                end
+            end
+        elseif event[1] == "timer" and event[2] == answer_timer then
+            self:exit_error("No answer from Tank manager")
         end
     end
 end
@@ -273,11 +306,13 @@ function DisplayManager:click(event)
         if data.name == event then
             if data.active then
                 data:deactivate()
+                self:wait_for_answer()
             else
                 if not self.mix_fluids then
                     self:deactivate_all_exept(data.name)
                 end
                 data:activate()
+                self:wait_for_answer()
             end
         end
     end
