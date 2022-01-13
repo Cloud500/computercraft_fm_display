@@ -60,6 +60,7 @@ function DisplayManager:create(mon, modem, recive_channel, send_channel, mix_flu
     local fm = {}
     setmetatable(fm, DisplayManager)
     mix_fluids = mix_fluids or false
+    mon.setTextScale(0.5)
     fm.mon = mon
     fm.width, fm.height = mon.getSize()
     fm.data = nil
