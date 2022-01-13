@@ -1,3 +1,0 @@
-[submodule "libs"]
-	path = libs
-	url = ssh://git@github.com/Cloud500/computercraft_libs.git
