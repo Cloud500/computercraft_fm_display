@@ -12,12 +12,13 @@ end
 
 setmetatable(MyClass, { __call = MyClass.__init__ })
 
-function MyClass:printData()
-    print(self.data)
-end
 
-function MyClass:do_things(data)
-    print(self.data .. " " .. data)
+function MyClass:call(data)
+    if data then
+        print("Object sagt " .. data)
+        else
+        print("Object sagt " .. self.data)
+    end
 end
 
 return MyClass
